@@ -12,9 +12,15 @@ class FlatRate(PricingStrategy):
     """Charges a fixed amount every billing period."""
 
     def __init__(self, amount: Money) -> None:
-        # TODO Day 1
-        raise NotImplementedError("Day 1: implement FlatRate.__init__")
+        if not isinstance(amount, Money):
+            raise TypeError(f"FlatRate requires Money, got {type(amount).__name__}")
+        if amount.is_negative():
+            raise ValueError("FlatRate amount must be non-negative")
+        self._amount = amount
 
     def calculate(self, quantity: int) -> Money:
-        # TODO Day 1
-        raise NotImplementedError("Day 1: implement FlatRate.calculate")
+        if not isinstance(quantity, int):
+            raise TypeError(f"Quantity must be int, got {type(quantity).__name__}")
+        if quantity < 0:
+            raise ValueError("Quantity must be non-negative")
+        return self._amount
