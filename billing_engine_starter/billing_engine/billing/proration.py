@@ -49,4 +49,7 @@ def compute_proration(
 ) -> ProrationResult:
     """Pure function. STRETCH — implement only after Days 1+2 are green."""
     # TODO Day 4
-    raise NotImplementedError("Day 4: implement compute_proration")
+    if not (period_start <= switch_date <= period_end):
+        raise ValueError(
+            f"switch_date {switch_date} outside period [{period_start}, {period_end}]"
+        )

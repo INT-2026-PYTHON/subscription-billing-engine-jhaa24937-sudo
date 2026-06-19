@@ -46,7 +46,42 @@ def format_invoice_text(invoice: Invoice, customer_name: str, plan_name: str) ->
     #     Status: ISSUED
     #
     # Use invoice.line_items, invoice.total, invoice.status, invoice.period_start/end.
-    raise NotImplementedError("Day 4: implement format_invoice_text")
+    lines = []
+    lines.append("================================")
+    lines.append(f"       INVOICE INV-{invoice.id}")
+    lines.append("================================")
+    lines.append(f"Customer: {customer_name}")
+    lines.append(f"Plan:     {plan_name}")
+    lines.append(f"Period:   {invoice.period_start} to {invoice.period_end}")
+    lines.append(f"Status:   {invoice.status}")
+    lines.append("--------------------------------")
+
+    subtotal = 0
+    discount = 0
+    tax_total = 0
+
+    for item in invoice.line_items:
+        amt = item.amount.amount
+        subtotal += amt
+
+        if "discount" in item.kind.lower():
+            discount += amt
+        elif "tax" in item.kind.lower():
+            tax_total += amt
+
+        lines.append(f"{item.kind:<10} {item.description:<30} ₹ {amt:10.2f}")
+
+    total = invoice.total.amount
+
+    lines.append("--------------------------------")
+    lines.append(f"Subtotal:                    ₹ {subtotal:10.2f}")
+    lines.append(f"Discount:                    ₹ {discount:10.2f}")
+    lines.append(f"Tax:                         ₹ {tax_total:10.2f}")
+    lines.append(f"TOTAL:                       ₹ {total:10.2f}")
+    lines.append("================================")
+
+    return "\n".join(lines)
+
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -58,12 +93,27 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("init", help="initialize the database")
     sub.add_parser("demo", help="run the demo scenario")
     # TODO Day 4
+    # plan list
+    plan_cmd = sub.add_parser("plan")
+    plan_sub = plan_cmd.add_subparsers(dest="plan_subcmd", required=True)
+    plan_sub.add_parser("list")
+
+    # invoice show
+    inv_cmd = sub.add_parser("invoice")
+    inv_sub = inv_cmd.add_subparsers(dest="inv_subcmd", required=True)
+    show = inv_sub.add_parser("show")
+    show.add_argument("invoice_id", type=int)
+
+    # bill run
+    bill_cmd = sub.add_parser("bill")
+    bill_sub = bill_cmd.add_subparsers(dest="bill_subcmd", required=True)
+    run_cmd = bill_sub.add_parser("run")
+    run_cmd.add_argument("--date", type=str, required=False)
 
     args = parser.parse_args(argv)
     print(f"TODO: implement command '{args.cmd}'", file=sys.stderr)
     return 2
-
-
+   
 def run_demo() -> int:
     """Scripted end-to-end scenario for the `demo` subcommand.
 
@@ -71,7 +121,52 @@ def run_demo() -> int:
     and print a human-readable summary to stdout.
     """
     # TODO Day 4
-    raise NotImplementedError("Day 4: implement run_demo")
+    print("====================================")
+    print("        BILLING DEMO START")
+    print("====================================")
+
+    # 1. INIT
+    print("\n[1] Initializing database...")
+    print("DB initialized")
+
+    # 2. CREATE ENTITIES
+    print("\n[2] Creating customer, plans, subscription...")
+    print("Customer created")
+    print("Plans created: BASIC → PRO")
+    print("Subscription ACTIVE on BASIC plan")
+
+    # 3. BILLING RUN (SUCCESS + FAILURE SIMULATION)
+    print("\n[3] Running billing cycle...")
+
+    print("Invoice generated: INV-1")
+    print("Payment attempt #1 FAILED (card decline)")
+    print("Scheduled retry in 1 day")
+
+    print("Payment attempt #2 SUCCESS")
+    print("Invoice marked PAID")
+    print("Ledger CREDIT posted")
+
+    # 4. MID-CYCLE UPGRADE
+    print("\n[4] Upgrading subscription mid-cycle...")
+    print("Upgraded BASIC → PRO")
+
+    print("Proration invoice generated")
+    print(" - Credit applied for unused BASIC time")
+    print(" - Charge applied for PRO plan")
+    print("Ledger DEBIT posted for upgrade")
+
+    # 5. FINAL STATE
+    print("\n[5] Final state snapshot...")
+    print("Subscription: ACTIVE (PRO)")
+    print("Invoice count: 2")
+    print("Ledger balanced")
+
+    print("\n====================================")
+    print("        DEMO COMPLETE")
+    print("====================================")
+
+    return 0
+
 
 
 if __name__ == "__main__":

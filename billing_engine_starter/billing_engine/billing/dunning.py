@@ -73,11 +73,13 @@ class DunningProcess:
     def attempt(self, invoice: Invoice, customer_id: int, now: datetime) -> DunningOutcome:
         """Try once. Record the attempt. Return the resulting outcome."""
         # TODO Day 4
-        raise NotImplementedError("Day 4: implement DunningProcess.attempt")
+        attempt_no = self.attempt_repo.count_for_invoice(invoice.id) + 1
+        result = self.gateway.charge(invoice)
 
     # --------------------------------------------------------
     @staticmethod
     def should_cancel(past_due_since: date, today: date, grace_days: int = 7) -> bool:
         """Helper used by BillingCycle to decide PAST_DUE → CANCELLED."""
         # TODO Day 4
-        raise NotImplementedError("Day 4: implement DunningProcess.should_cancel")
+        return (today - past_due_since).days >= grace_days
+    
