@@ -100,3 +100,35 @@ def make_no_tax_factory() -> Callable:
     def factory(customer):
         return (NoTax(), TaxContext(customer_country=customer.country_code))
     return factory
+@pytest.fixture
+def db() -> Database:
+    """A fresh, file-backed SQLite database with schema applied.
+
+    File-backed (not :memory:) so the same DB can be opened across multiple
+    short-lived connections in a single test (which BillingCycle does).
+    """
+    fd, path = tempfile.mkstemp(suffix=".db")
+    os.close(fd)
+    database = Database(path)
+    database.init_schema()
+    yield database
+    
+    # Cleanup: on Windows, we need to ensure SQLite releases its locks
+    # before trying to delete the file.
+    import sys
+    import gc
+    
+    if sys.platform == "win32":
+        # Force garbage collection to release any lingering references
+        gc.collect()
+        # Give the OS time to release file locks
+        import time
+        time.sleep(0.05)
+    
+    # Now try to delete the file
+    try:
+        Path(path).unlink()
+    except PermissionError:
+        # If still locked on Windows, this is expected under heavy load
+        # The temp file will be cleaned up by the OS eventually
+        pass

@@ -381,11 +381,27 @@ class LedgerRepository:
 
     def add(self, entry: LedgerEntry) -> LedgerEntry:
         # TODO Day 2.
-        raise NotImplementedError("Day 2: implement LedgerRepository.add")
+        with self.db.transaction() as conn:
+            new_id = q.insert_ledger_entry(
+                conn,
+                entry.customer_id,
+                entry.invoice_id,
+                entry.amount.to_storage(),
+                entry.currency,
+                entry.direction.value,
+                entry.description,
+            )
+    
+        
 
     def list_for_customer(self, customer_id: int) -> list[LedgerEntry]:
         # TODO Day 2.
-        raise NotImplementedError("Day 2: implement LedgerRepository.list_for_customer")
+    
+            with self.db.connect() as conn:
+                rows = q.select_ledger_entries_for_customer(conn, customer_id)  
+        return [_ledger_entry_from_row(row) for row in rows]
+
+
 
     # ✅ These two methods are intentionally implemented to REJECT — do not override.
     def update(self, *args, **kwargs):
@@ -411,12 +427,24 @@ class PaymentAttemptRepository:
         next_retry_at: Optional[datetime],
     ) -> int:
         # TODO Day 3.
-        raise NotImplementedError("Day 3: implement PaymentAttemptRepository.add")
-
+        with self.db.transaction() as conn:
+            return q.insert_payment_attempt(
+                conn,
+                invoice_id,
+                attempt_no,
+                status,
+                failure_reason,
+                next_retry_at.isoformat() if next_retry_at else None,
+            )
     def list_for_invoice(self, invoice_id: int) -> list[dict]:
         # TODO Day 3.
-        raise NotImplementedError("Day 3: implement PaymentAttemptRepository.list_for_invoice")
+        with self.db.connect() as conn:
+            rows = q.select_payment_attempts_for_invoice(conn, invoice_id)
+        return [dict(row) for row in rows]  
+    
 
     def count_for_invoice(self, invoice_id: int) -> int:
         # TODO Day 3.
-        raise NotImplementedError("Day 3: implement PaymentAttemptRepository.count_for_invoice")
+        with self.db.connect() as conn:
+            return q.count_payment_attempts_for_invoice(conn, invoice_id)   
+
